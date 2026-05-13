@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AIGC 新题库刷题</title>
+    <style>
+        :root {
+            --ink: #172033;
+            --ink-soft: #526071;
+            --paper: #fbfcf8;
+            --surface: #ffffff;
+            --line: #dfe6df;
+            --navy: #123047;
+            --teal: #0f8a7b;
+            --teal-deep: #0a6e62;
+            --amber: #f0b429;
+            --success-bg: #e7f7ef;
+            --success-border: #17a36b;
+            --error-bg: #fff0ed;
+            --error-border: #dc4c3f;
+            --shadow: 0 18px 45px rgba(18, 48, 71, 0.12);
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body, html { height: 100%; overflow: hidden; }
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+            background:
+                linear-gradient(135deg, rgba(15, 138, 123, 0.08), transparent 34%),
+                linear-gradient(315deg, rgba(240, 180, 41, 0.10), transparent 28%),
+                var(--paper);
+            color: var(--ink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 920px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: rgba(251, 252, 248, 0.92);
+            box-shadow: var(--shadow);
+            position: relative;
+            border-left: 1px solid rgba(18, 48, 71, 0.08);
+            border-right: 1px solid rgba(18, 48, 71, 0.08);
+        }
+
+        .header {
+            background: var(--navy);
+            color: white;
+            padding: 1rem 1.25rem 1.1rem;
+            flex-shrink: 0;
+            z-index: 10;
+            border-bottom: 4px solid var(--teal);
+        }
+        .brand-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+        .header h1 { font-size: 1.35rem; font-weight: 800; margin: 0; letter-spacing: 0; }
+        .header-subtitle { color: rgba(255,255,255,0.72); font-size: 0.86rem; margin-top: 0.35rem; }
+        .header-badge {
+            flex-shrink: 0;
+            padding: 0.38rem 0.68rem;
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: 999px;
+            color: #dff9f4;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .controls-top {
+            display: grid;
+            grid-template-columns: minmax(180px, 0.85fr) 1.15fr;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.9rem 1.25rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+            z-index: 9;
+        }
+        .filter-field { display: flex; flex-direction: column; gap: 0.35rem; }
+        .field-label {
+            color: var(--ink-soft);
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+        select {
+            width: 100%;
+            padding: 0.68rem 0.8rem;
+            border: 1px solid #cad6d1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #fff;
+            outline: none;
+            color: var(--ink);
+            cursor: pointer;
+            transition: border-color 0.18s, box-shadow 0.18s;
+        }
+        select:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15, 138, 123, 0.12); }
+        .progress-panel { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
+        .progress { font-size: 0.9rem; color: var(--ink); font-weight: 800; text-align: right; }
+        .progress-track { height: 8px; border-radius: 999px; background: #e8eee9; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--teal), var(--amber)); border-radius: inherit; transition: width 0.28s ease; }
+
+        .main-content { flex: 1; overflow-y: auto; padding: 1.1rem; display: flex; flex-direction: column; }
+        .main-content::-webkit-scrollbar, .q-text::-webkit-scrollbar, .options::-webkit-scrollbar, .answer-box::-webkit-scrollbar { width: 8px; }
+        .main-content::-webkit-scrollbar-thumb, .q-text::-webkit-scrollbar-thumb, .options::-webkit-scrollbar-thumb, .answer-box::-webkit-scrollbar-thumb { background: #c8d5ce; border-radius: 999px; }
+
+        .card {
+            background: var(--surface);
+            padding: 1.35rem;
+            border-radius: var(--radius);
+            border: 1px solid rgba(18, 48, 71, 0.10);
+            box-shadow: 0 10px 25px rgba(18, 48, 71, 0.08);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #edf1ed;
+            padding-bottom: 0.9rem;
+        }
+        .q-type {
+            display: inline-flex;
+            align-items: center;
+            background: #e8f6f3;
+            color: var(--teal-deep);
+            padding: 0.32rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+        .q-id { margin-top: 0.42rem; font-size: 0.82rem; color: var(--ink-soft); font-weight: 700; }
+        .q-count { color: var(--navy); font-size: 1.1rem; font-weight: 900; white-space: nowrap; }
+
+        .q-text {
+            font-size: 1.08rem;
+            font-weight: 650;
+            margin-bottom: 1.1rem;
+            white-space: pre-wrap;
+            color: #111827;
+            line-height: 1.72;
+            max-height: 38vh;
+            overflow-y: auto;
+            padding: 0.15rem 0.55rem 0.15rem 0;
+        }
+        .q-text pre {
+            background: #111827;
+            color: #e5edf3;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.92rem;
+            border: 1px solid #263244;
+        }
+        .q-text code { font-family: inherit; }
+
+        .options { display: flex; flex-direction: column; gap: 0.7rem; flex: 1; overflow-y: auto; padding: 0.05rem 0.15rem 1rem 0.05rem; }
+        .option {
+            position: relative;
+            display: grid;
+            grid-template-columns: 2.2rem 1fr;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 3.35rem;
+            padding: 0.82rem 0.95rem;
+            border: 1px solid #d7e0dc;
+            border-radius: 9px;
+            cursor: pointer;
+            background: #fff;
+            font-size: 1rem;
+            line-height: 1.45;
+            transition: transform 0.16s, border-color 0.16s, background 0.16s, box-shadow 0.16s;
+        }
+        .option:hover:not(.disabled) { border-color: var(--teal); background: #f4fbf9; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(15, 138, 123, 0.10); }
+        .option.selected { border-color: var(--teal); background: #eefaf7; box-shadow: inset 0 0 0 1px rgba(15, 138, 123, 0.25); }
+        .option.correct { border-color: var(--success-border); background: var(--success-bg); }
+        .option.incorrect { border-color: var(--error-border); background: var(--error-bg); }
+        .option.disabled { cursor: default; opacity: 0.96; }
+        .option input { position: absolute; opacity: 0; pointer-events: none; }
+        .choice-mark {
+            width: 2.1rem;
+            height: 2.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #eef2ef;
+            color: var(--navy);
+            font-weight: 900;
+        }
+        .option.selected .choice-mark { background: var(--teal); color: #fff; }
+        .option.correct .choice-mark { background: var(--success-border); color: #fff; }
+        .option.incorrect .choice-mark { background: var(--error-border); color: #fff; }
+        .option-copy { min-width: 0; overflow-wrap: anywhere; }
+
+        .input-text, .input-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #cad6d1;
+            border-radius: 9px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: #fbfcfb;
+            color: var(--ink);
+            transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+        }
+        .input-text:focus, .input-textarea:focus { outline: none; border-color: var(--teal); background: white; box-shadow: 0 0 0 4px rgba(15, 138, 123, 0.12); }
+        .input-textarea { flex: 1; min-height: 150px; resize: none; line-height: 1.65; }
+
+        .answer-box {
+            margin-top: 1.2rem;
+            padding: 1.05rem 1.1rem;
+            background: #f7faf8;
+            border: 1px solid #dbe6df;
+            border-left: 5px solid var(--teal);
+            border-radius: 8px;
+            display: none;
+            font-size: 0.95rem;
+            max-height: 27vh;
+            overflow-y: auto;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        .answer-box.show { display: block; animation: fadeIn 0.25s ease; }
+        .answer-title { font-weight: 900; color: var(--teal-deep); margin-bottom: 0.55rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+        .answer-content { white-space: pre-wrap; color: var(--ink); line-height: 1.65; overflow-wrap: anywhere; }
+
+        .bottom-bar {
+            background: rgba(255,255,255,0.94);
+            padding: 0.95rem 1.1rem;
+            box-shadow: 0 -10px 30px rgba(18, 48, 71, 0.08);
+            flex-shrink: 0;
+            display: grid;
+            grid-template-columns: 1fr 1.15fr 1fr 0.9fr;
+            gap: 0.7rem;
+            z-index: 10;
+            border-top: 1px solid var(--line);
+        }
+        .btn {
+            min-width: 0;
+            padding: 0.82rem 0.65rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.98rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.16s, box-shadow 0.16s, background 0.16s, border-color 0.16s;
+            white-space: nowrap;
+        }
+        .btn:active:not(:disabled) { transform: scale(0.98); }
+        .btn-outline { background: #fff; border: 1px solid #cbd6d1; color: var(--ink); }
+        .btn-outline:hover:not(:disabled) { background: #f7faf8; border-color: var(--teal); }
+        .btn-primary { background: var(--navy); color: white; box-shadow: 0 8px 18px rgba(18, 48, 71, 0.18); }
+        .btn-primary:hover:not(:disabled) { background: #0d273b; }
+        .btn-success { background: var(--teal); color: white; box-shadow: 0 8px 18px rgba(15, 138, 123, 0.18); }
+        .btn-success:hover:not(:disabled) { background: var(--teal-deep); }
+        .btn:disabled { opacity: 0.42; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 700px) {
+            .app-container { max-width: none; border: none; }
+            .header { padding: 0.85rem 0.9rem 0.95rem; }
+            .brand-row { align-items: flex-start; }
+            .header h1 { font-size: 1.08rem; }
+            .header-subtitle { font-size: 0.76rem; }
+            .header-badge { display: none; }
+            .controls-top { grid-template-columns: 1fr; gap: 0.7rem; padding: 0.75rem 0.85rem; }
+            .progress { text-align: left; }
+            .main-content { padding: 0.7rem; }
+            .card { padding: 0.9rem; border-radius: 9px; }
+            .q-header { margin-bottom: 0.75rem; padding-bottom: 0.75rem; }
+            .q-count { font-size: 0.95rem; }
+            .q-text { font-size: 1rem; margin-bottom: 0.85rem; max-height: 34vh; }
+            .option { grid-template-columns: 1.9rem 1fr; min-height: 3rem; padding: 0.72rem; font-size: 0.95rem; }
+            .choice-mark { width: 1.85rem; height: 1.85rem; border-radius: 7px; }
+            .bottom-bar { grid-template-columns: 1fr 1fr; padding: 0.7rem; gap: 0.55rem; }
+            .btn { padding: 0.72rem 0.45rem; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header class="header">
+        <div class="brand-row">
+            <div>
+                <h1>AIGC 新题库刷题</h1>
+                <div class="header-subtitle">88 题练习工作台 · 自动判分 · 参考答案</div>
+            </div>
+            <div class="header-badge">本地单页版</div>
+        </div>
+    </header>
+    
+    <div class="controls-top">
+        <label class="filter-field">
+            <span class="field-label">题型筛选</span>
+            <select id="type-filter">
+                <option value="all">所有题目</option>
+            </select>
+        </label>
+        <div class="progress-panel">
+            <div class="progress" id="progress-text"></div>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+    </div>
+    
+    <div class="main-content" id="main-content">
+        <div class="card" id="q-container">
+            <!-- Question will be rendered here -->
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <button id="prev-btn" class="btn btn-outline">‹ 上一题</button>
+        <button id="check-btn" class="btn btn-success">核对答案</button>
+        <button id="next-btn" class="btn btn-primary">下一题 ›</button>
+        <button id="submit-btn" class="btn btn-success">交卷</button>
+    </div>
+</div>
+
+    <script>
+        const allQuestions = [
+  {
+    "id": 1,
+    "type": "单项选择题",
+    "question": "以下哪种工具常用于中文文本分词任务？（ ）",
+    "options": [
+      "A. NLTK",
+      "B. Jieba",
+      "C. OpenCV",
+      "D. Scikit-learn"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 2,
+    "type": "单项选择题",
+    "question": "模型评估中，用于衡量模型在不均衡数据集中综合性能的核心指标是？（ ）",
+    "options": [
+      "A. 准确率",
+      "B. 宏平均F1-score",
+      "C. 特异度",
+      "D. 召回率"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 3,
+    "type": "单项选择题",
+    "question": "数据标注中，“难例标注”的核心目的是？（ ）",
+    "options": [
+      "A. 减少标注工作量",
+      "B. 聚焦模型薄弱环节，提升泛化能力",
+      "C. 提高标注速度",
+      "D. 简化标注规则"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 4,
+    "type": "单项选择题",
+    "question": "PaddlePaddle中，用于加载预训练模型的核心函数是？（ ）",
+    "options": [
+      "A. paddle.load()",
+      "B. paddle.Model()",
+      "C. paddle.nn.Sequential()",
+      "D. paddle.optimizer.Adam()"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 5,
+    "type": "单项选择题",
+    "question": "图像语义分割任务中，常用的评价指标是？（ ）",
+    "options": [
+      "A. mIOU",
+      "B. 准确率",
+      "C. 精确率",
+      "D. F1-score"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 6,
+    "type": "单项选择题",
+    "question": "以下哪种不属于数据脱敏的常用方法？（ ）",
+    "options": [
+      "A. 替换法",
+      "B. 屏蔽法",
+      "C. 加密法",
+      "D. 数据增强"
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 7,
+    "type": "单项选择题",
+    "question": "智能训练项目中，“数据漂移”指的是？（ ）",
+    "options": [
+      "A. 数据存储位置变更",
+      "B. 数据分布随时间发生变化，导致模型性能下降",
+      "C. 数据格式不统一",
+      "D. 数据丢失"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 8,
+    "type": "单项选择题",
+    "question": "以下哪种算法常用于异常值检测？（ ）",
+    "options": [
+      "A. K-means",
+      "B. 孤立森林（Isolation Forest）",
+      "C. 逻辑回归",
+      "D. 随机森林"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 9,
+    "type": "单项选择题",
+    "question": "语音合成（TTS）的核心输出是？（ ）",
+    "options": [
+      "A. 文本",
+      "B. 语音信号",
+      "C. 词向量",
+      "D. 特征矩阵"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 10,
+    "type": "单项选择题",
+    "question": "数据标注规范中，“边界清晰”的核心要求是？（ ）",
+    "options": [
+      "A. 标注框不超出图像范围",
+      "B. 明确标注对象的归属类别和范围",
+      "C. 标注速度快",
+      "D. 标注格式统一"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 11,
+    "type": "单项选择题",
+    "question": "Scikit-learn中，用于特征选择的SelectKBest类，其核心参数是？（ ）",
+    "options": [
+      "A. k",
+      "B. n_components",
+      "C. alpha",
+      "D. threshold"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 12,
+    "type": "单项选择题",
+    "question": "模型训练中，“早停法”的触发条件通常是？（ ）",
+    "options": [
+      "A. 训练轮数达到上限",
+      "B. 验证集损失连续多轮不再下降",
+      "C. 训练集损失为0",
+      "D. 模型参数收敛"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 13,
+    "type": "单项选择题",
+    "question": "文本情感分析中，常用于表示文本情感强度的指标是？（ ）",
+    "options": [
+      "A. 词频",
+      "B. 情感分数（Sentiment Score）",
+      "C. TF-IDF值",
+      "D. 词向量相似度"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 14,
+    "type": "单项选择题",
+    "question": "以下哪种属于模型压缩中的“剪枝”技术？（ ）",
+    "options": [
+      "A. 去除模型中权重接近0的连接",
+      "B. 将模型参数量化为低精度",
+      "C. 用小模型模仿大模型的输出",
+      "D. 减少输入特征维度"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 15,
+    "type": "单项选择题",
+    "question": "点云数据配准的核心目的是？（ ）",
+    "options": [
+      "A. 降低点云密度",
+      "B. 将不同视角的点云数据统一到同一坐标系",
+      "C. 分割不同物体",
+      "D. 提取点云特征"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 16,
+    "type": "单项选择题",
+    "question": "智能客服机器人中，“多轮对话”的核心技术是？（ ）",
+    "options": [
+      "A. 关键词匹配",
+      "B. 上下文状态管理",
+      "C. 语音识别",
+      "D. 文本分类"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 17,
+    "type": "单项选择题",
+    "question": "数据清洗中，“归一化”与“标准化”的核心区别是？（ ）",
+    "options": [
+      "A. 归一化处理后数据范围固定，标准化是均值为0、方差为1",
+      "B. 标准化处理后数据范围固定，归一化是均值为0、方差为1",
+      "C. 归一化适用于线性模型，标准化适用于非线性模型",
+      "D. 归一化会改变数据分布，标准化不会"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 18,
+    "type": "单项选择题",
+    "question": "以下哪种工具常用于数据标注质量评估？（ ）",
+    "options": [
+      "A. LabelStudio",
+      "B. Matplotlib",
+      "C. NumPy",
+      "D. Pandas"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 19,
+    "type": "单项选择题",
+    "question": "半监督学习的核心特点是？（ ）",
+    "options": [
+      "A. 仅使用标注数据训练",
+      "B. 仅使用未标注数据训练",
+      "C. 结合少量标注数据和大量未标注数据训练",
+      "D. 不需要训练数据"
+    ],
+    "answer": "C"
+  },
+  {
+    "id": 20,
+    "type": "单项选择题",
+    "question": "图像标注中，“属性标注”的核心作用是？（ ）",
+    "options": [
+      "A. 确定目标位置",
+      "B. 描述目标的具体特征（如颜色、状态）",
+      "C. 分割目标区域",
+      "D. 标注目标类别"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 21,
+    "type": "单项选择题",
+    "question": "TensorFlow中，用于实现模型微调（Fine-tuning）的核心思路是？（ ）",
+    "options": [
+      "A. 冻结预训练模型部分层，训练顶层层",
+      "B. 重新训练整个预训练模型",
+      "C. 更换预训练模型的激活函数",
+      "D. 减少预训练模型的层数"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 22,
+    "type": "单项选择题",
+    "question": "业务数据采集的“完整性”要求不包括？（ ）",
+    "options": [
+      "A. 覆盖所有业务场景",
+      "B. 关键字段无缺失",
+      "C. 数据量越大越好",
+      "D. 包含异常场景数据"
+    ],
+    "answer": "C"
+  },
+  {
+    "id": 23,
+    "type": "单项选择题",
+    "question": "以下哪种属于生成式对抗网络（GAN）的核心组件？（ ）",
+    "options": [
+      "A. 编码器和解码器",
+      "B. 生成器和判别器",
+      "C. 卷积层和池化层",
+      "D. 循环层和全连接层"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 24,
+    "type": "单项选择题",
+    "question": "数据标注团队的“标注一致性”Kappa系数达到多少可认为标注质量合格？（ ）",
+    "options": [
+      "A. ≥0.5",
+      "B. ≥0.7",
+      "C. ≥0.3",
+      "D. ≥0.9"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 25,
+    "type": "单项选择题",
+    "question": "模型部署中，“TensorRT”的核心作用是？（ ）",
+    "options": [
+      "A. 模型训练加速",
+      "B. 模型推理加速",
+      "C. 数据预处理",
+      "D. 模型评估"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 26,
+    "type": "单项选择题",
+    "question": "文本数据中，“实体链接”的核心任务是？（ ）",
+    "options": [
+      "A. 识别文本中的实体",
+      "B. 将文本中的实体映射到知识库中的统一实体",
+      "C. 标注实体的属性",
+      "D. 提取实体间的关系"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 27,
+    "type": "单项选择题",
+    "question": "语音数据中，“梅尔频率倒谱系数（MFCC）”的核心用途是？（ ）",
+    "options": [
+      "A. 语音合成",
+      "B. 语音特征提取",
+      "C. 语音转写",
+      "D. 语音降噪"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 28,
+    "type": "单项选择题",
+    "question": "以下哪种不属于业务流程优化的“精益管理”原则？（ ）",
+    "options": [
+      "A. 消除浪费",
+      "B. 持续改进",
+      "C. 批量生产",
+      "D. 以客户为中心"
+    ],
+    "answer": "C"
+  },
+  {
+    "id": 29,
+    "type": "单项选择题",
+    "question": "模型评估中，“混淆矩阵”不能直接反映的指标是？（ ）",
+    "options": [
+      "A. 准确率",
+      "B. 精确率",
+      "C. F1-score",
+      "D. 模型训练时间"
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 30,
+    "type": "单项选择题",
+    "question": "数据标注中，“模糊目标”的处理原则是？（ ）",
+    "options": [
+      "A. 强制标注类别",
+      "B. 标注为“不确定”类别",
+      "C. 无法明确判断时舍弃不标注",
+      "D. 随意标注一个类别"
+    ],
+    "answer": "C"
+  },
+  {
+    "id": 31,
+    "type": "单项选择题",
+    "question": "PyTorch中，“torch.nn.CrossEntropyLoss”适用于哪种任务？（ ）",
+    "options": [
+      "A. 二分类任务",
+      "B. 多分类任务",
+      "C. 回归任务",
+      "D. 聚类任务"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 32,
+    "type": "单项选择题",
+    "question": "智能训练项目的“需求评审”核心参与者不包括？（ ）",
+    "options": [
+      "A. 需求提出方",
+      "B. 标注员",
+      "C. 算法工程师",
+      "D. 项目负责人"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 33,
+    "type": "单项选择题",
+    "question": "以下哪种数据属于“时序数据”？（ ）",
+    "options": [
+      "A. 用户画像数据",
+      "B. 股票价格走势数据",
+      "C. 商品分类数据",
+      "D. 图像数据"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 34,
+    "type": "单项选择题",
+    "question": "模型优化中，“知识蒸馏”的核心思路是？（ ）",
+    "options": [
+      "A. 用大模型（教师模型）指导小模型（学生模型）训练",
+      "B. 增加模型的层数",
+      "C. 减少模型的参数",
+      "D. 更换模型的激活函数"
+    ],
+    "answer": "A"
+  },
+  {
+    "id": 35,
+    "type": "单项选择题",
+    "question": "数据安全中，“访问控制”的核心目的是？（ ）",
+    "options": [
+      "A. 防止数据丢失",
+      "B. 限制不同角色对数据的访问权限",
+      "C. 加密数据",
+      "D. 备份数据"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 36,
+    "type": "单项选择题",
+    "question": "文本标注中，“关系标注”的核心是标注什么？（ ）",
+    "options": [
+      "A. 文本的情感倾向",
+      "B. 文本中的实体",
+      "C. 实体间的关联类型",
+      "D. 文本的主题"
+    ],
+    "answer": "C"
+  },
+  {
+    "id": 37,
+    "type": "单项选择题",
+    "question": "图像数据增强中，“MixUp”技术的核心操作是？（ ）",
+    "options": [
+      "A. 随机翻转图像",
+      "B. 混合两张图像及其标签",
+      "C. 随机裁剪图像",
+      "D. 调整图像亮度"
+    ],
+    "answer": "B"
+  },
+  {
+    "id": 38,
+    "type": "单项选择题",
+    "question": "智能客服机器人的“意图识别准确率”低于多少时需要优化？（ ）",
+    "options": [
+      "A. 95%",
+      "B. 90%",
+      "C. 85%",
+      "D. 80%"
+    ],
+    "answer": "C"
+  },
+  {
+    "id": 39,
+    "type": "单项选择题",
+    "question": "以下哪种不属于点云数据的预处理操作？（ ）",
+    "options": [
+      "A. 降采样",
+      "B. 滤波去噪",
+      "C. 语义分割",
+      "D. 坐标系转换"
+    ],
+    "answer": "C"
+  },
+  {
+    "id": 40,
+    "type": "单项选择题",
+    "question": "人工智能训练项目验收的“交付物”不包括？（ ）",
+    "options": [
+      "A. 训练好的模型",
+      "B. 标注数据集及规范",
+      "C. 项目开发代码",
+      "D. 标注员的个人信息"
+    ],
+    "answer": "D"
+  },
+  {
+    "id": 41,
+    "type": "多项选择题",
+    "question": "人工智能训练中，数据质量的核心评估维度包括？（ ）",
+    "options": [
+      "A. 准确性",
+      "B. 完整性",
+      "C. 一致性",
+      "D. 时效性"
+    ],
+    "answer": "ABCD"
+  },
+  {
+    "id": 42,
+    "type": "多项选择题",
+    "question": "模型部署的核心挑战包括？（ ）",
+    "options": [
+      "A. 推理速度要求",
+      "B. 硬件资源限制",
+      "C. 数据兼容性",
+      "D. 模型版本管理"
+    ],
+    "answer": "ABCD"
+  },
+  {
+    "id": 43,
+    "type": "多项选择题",
+    "question": "文本数据标注的常见错误类型包括？（ ）",
+    "options": [
+      "A. 实体漏标",
+      "B. 关系错标",
+      "C. 情感倾向误判",
+      "D. 分词错误"
+    ],
+    "answer": "ABC"
+  },
+  {
+    "id": 44,
+    "type": "多项选择题",
+    "question": "深度学习中，常用的优化器包括？（ ）",
+    "options": [
+      "A. SGD",
+      "B. Adam",
+      "C. RMSprop",
+      "D. CrossEntropy"
+    ],
+    "answer": "ABC"
+  },
+  {
+    "id": 45,
+    "type": "多项选择题",
+    "question": "数据增强在自然语言处理中的常用方法包括？（ ）",
+    "options": [
+      "A. 同义词替换",
+      "B. 随机插入",
+      "C. 句子重排",
+      "D. 随机删除"
+    ],
+    "answer": "ABCD"
+  },
+  {
+    "id": 46,
+    "type": "多项选择题",
+    "question": "智能客服机器人的知识库构建的核心步骤包括？（ ）",
+    "options": [
+      "A. 知识采集",
+      "B. 知识结构化",
+      "C. 知识审核",
+      "D. 知识更新"
+    ],
+    "answer": "ABCD"
+  },
+  {
+    "id": 47,
+    "type": "多项选择题",
+    "question": "数据标注工具的核心功能应包括？（ ）",
+    "options": [
+      "A. 多种标注方式支持",
+      "B. 标注数据导出",
+      "C. 标注历史回溯",
+      "D. 标注质量统计"
+    ],
+    "answer": "ABCD"
+  },
+  {
+    "id": 48,
+    "type": "多项选择题",
+    "question": "模型过拟合的常见表现包括？（ ）",
+    "options": [
+      "A. 训练集损失低，测试集损失高",
+      "B. 训练集准确率高，测试集准确率低",
+      "C. 模型参数过多",
+      "D. 数据增强效果差"
+    ],
+    "answer": "AB"
+  },
+  {
+    "id": 49,
+    "type": "多项选择题",
+    "question": "语音数据处理的核心预处理步骤包括？（ ）",
+    "options": [
+      "A. 预加重",
+      "B. 分帧加窗",
+      "C. 梅尔滤波",
+      "D. 倒谱变换"
+    ],
+    "answer": "ABCD"
+  },
+  {
+    "id": 50,
+    "type": "多项选择题",
+    "question": "业务流程优化的核心目标包括？（ ）",
+    "options": [
+      "A. 提高效率",
+      "B. 降低成本",
+      "C. 提升质量",
+      "D. 增强灵活性"
+    ],
+    "answer": "ABCD"
+  },
+  {
+    "id": 51,
+    "type": "判断题",
+    "question": "数据标注的一致性Kappa系数越高，说明标注质量越好。（ ）",
+    "options": [],
+    "answer": "√"
+  },
+  {
+    "id": 52,
+    "type": "判断题",
+    "question": "模型压缩会必然导致模型精度下降。（ ）",
+    "options": [],
+    "answer": "×"
+  },
+  {
+    "id": 53,
+    "type": "判断题",
+    "question": "半监督学习的效果一定优于监督学习。（ ）",
+    "options": [],
+    "answer": "×"
+  },
+  {
+    "id": 54,
+    "type": "判断题",
+    "question": "数据脱敏后的数据无法恢复原始数据。（ ）",
+    "options": [],
+    "answer": "√"
+  },
+  {
+    "id": 55,
+    "type": "判断题",
+    "question": "智能客服机器人的多轮对话能力依赖于上下文状态的准确管理。（ ）",
+    "options": [],
+    "answer": "√"
+  },
+  {
+    "id": 56,
+    "type": "判断题",
+    "question": "图像语义分割任务需要对每个像素进行类别标注。（ ）",
+    "options": [],
+    "answer": "√"
+  },
+  {
+    "id": 57,
+    "type": "判断题",
+    "question": "模型训练的迭代次数越多，模型性能越好。（ ）",
+    "options": [],
+    "answer": "×"
+  },
+  {
+    "id": 58,
+    "type": "判断题",
+    "question": "业务流程优化后不需要进行效果评估。（ ）",
+    "options": [],
+    "answer": "×"
+  },
+  {
+    "id": 59,
+    "type": "判断题",
+    "question": "点云数据的降采样会减少数据量，同时保留核心特征。（ ）",
+    "options": [],
+    "answer": "√"
+  },
+  {
+    "id": 60,
+    "type": "判断题",
+    "question": "文本数据的TF-IDF值越高，说明该词对文本的重要性越高。（ ）",
+    "options": [],
+    "answer": "√"
+  },
+  {
+    "id": 61,
+    "type": "填空题",
+    "question": "数据标注中，用于衡量标注员之间一致性的指标是___________。",
+    "options": [],
+    "answer": "Kappa系数"
+  },
+  {
+    "id": 62,
+    "type": "填空题",
+    "question": "模型训练中，用于衡量预测值与真实值差异的函数称为___________。",
+    "options": [],
+    "answer": "损失函数"
+  },
+  {
+    "id": 63,
+    "type": "填空题",
+    "question": "自然语言处理中，将文本转换为计算机可处理的向量形式的过程称为___________。",
+    "options": [],
+    "answer": "文本向量化"
+  },
+  {
+    "id": 64,
+    "type": "填空题",
+    "question": "图像增强中，随机改变图像亮度、对比度的操作属于___________变换。",
+    "options": [],
+    "answer": "像素"
+  },
+  {
+    "id": 65,
+    "type": "填空题",
+    "question": "智能客服机器人中，将用户输入映射到预设意图类别的过程称为___________。",
+    "options": [],
+    "answer": "意图识别"
+  },
+  {
+    "id": 66,
+    "type": "填空题",
+    "question": "模型部署中，将模型转换为适合边缘设备运行的格式的技术称为___________。",
+    "options": [],
+    "answer": "模型量化"
+  },
+  {
+    "id": 67,
+    "type": "填空题",
+    "question": "数据清洗中，处理缺失值的常用方法包括删除法、替换法和___________。",
+    "options": [],
+    "answer": "插值法"
+  },
+  {
+    "id": 68,
+    "type": "填空题",
+    "question": "生成式对抗网络（GAN）中，负责生成虚假数据的组件是___________。",
+    "options": [],
+    "answer": "生成器"
+  },
+  {
+    "id": 69,
+    "type": "简答题",
+    "question": "简述数据安全在人工智能训练中的核心保障措施。",
+    "options": [],
+    "answer": "数据安全核心保障措施：\n1) 数据加密：对敏感数据进行传输加密（如SSL/TLS）和存储加密（如AES）；\n2) 访问控制：基于角色的权限管理（RBAC），限制数据访问范围；\n3)  数据脱敏：通过替换、屏蔽、混淆等方式处理敏感字段，保留数据可用性；\n4)  日志审计：记录数据访问、操作日志，便于追溯违规行为；\n5)  数据备份与恢复：定期备份数据，制定灾难恢复预案；\n6) 合规性检查：遵循《网络安全法》《数据安全法》等法规要求。"
+  },
+  {
+    "id": 70,
+    "type": "简答题",
+    "question": "请说明半监督学习的适用场景及核心优势。",
+    "options": [],
+    "answer": "半监督学习适用场景及优势：\n适用场景：\n1)  标注数据成本高、难度大的场景；\n2)  未标注数据丰富，但标注数据稀缺的场景；\n3)  对模型泛化能力要求较高的场景。\n核心优势：\n1)  降低标注成本：充分利用未标注数据，减少标注工作量；\n2)  提升泛化能力：结合大量未标注数据的分布信息，增强模型对新数据的适应能力；\n3)  适用范围广：弥补监督学习对标注数据的依赖，拓展AI应用场景。"
+  },
+  {
+    "id": 71,
+    "type": "简答题",
+    "question": "简述模型部署的完整流程。",
+    "options": [],
+    "answer": "模型部署完整流程及注意事项：\n流程：\n1)  模型导出：将训练好的模型导出为标准格式；\n2) 模型优化：进行量化、剪枝、知识蒸馏等压缩优化；\n3)  部署环境准备：配置硬件资源、安装依赖库、搭建服务框架；\n4) 模型部署：将优化后的模型部署到目标环境；\n5)  接口开发：提供API接口，支持外部系统调用；\n6)  测试验证：验证模型响应速度、准确率、稳定性；\n7)  监控运维：实时监控模型性能，及时处理数据漂移、故障等问题。"
+  },
+  {
+    "id": 72,
+    "type": "简答题",
+    "question": "请阐述数据标注团队的管理核心要点。",
+    "options": [],
+    "answer": "数据标注团队管理核心要点：\n1)  人员选拔与培训：选拔责任心强、理解能力好的标注员，开展标注规范、工具使用培训及考核；\n2)  标准化管理：制定清晰的标注规范、操作流程、质量标准，确保标注一致性；\n3)  质量控制：建立抽检、交叉校验、终检机制，及时发现并纠正标注错误；\n4)  效率管理：合理分配任务，监控标注进度，优化标注工具和流程，提升效率；\n5)  激励与沟通：建立奖惩机制，及时沟通标注问题，解答疑问，提升团队积极性；\n6)  持续优化：收集标注员反馈，迭代标注规范和工具，降低标注难度。"
+  },
+  {
+    "id": 73,
+    "type": "简答题",
+    "question": "简述人工智能训练项目的风险类型。",
+    "options": [],
+    "answer": "人工智能训练项目风险类型及应对策略：\n风险类型：\n1) 需求风险：需求不明确、变更频繁；\n2) 数据风险：数据质量差、数据量不足、数据安全问题；\n3)  技术风险：算法选型不当、模型性能不达标、部署兼容性问题；\n4)  进度风险：任务延期、资源不足；\n5)  质量风险：标注质量低、模型效果不符合要求。"
+  },
+  {
+    "id": 74,
+    "type": "实践题 - 一、业务分析",
+    "question": "题干：某高校计划开发智慧校园智能教务问答系统，基于学籍信息、选课规则、成绩管理、奖助勤贷政策等数据，为学生提供选课咨询、成绩查询、学籍办理、奖助学金申请等智能解答。请结合业务特征和AI技术要求，完成以下简答题：\n\n1. 简述该系统业务数据采集的核心来源及数据质量管控要点",
+    "options": [],
+    "answer": "核心来源：\n①教务管理系统（选课数据、成绩数据、学籍信息）；\n②学校官方政策文件（奖助勤贷规则、学籍办理流程）；\n③学生咨询日志（教务咨询历史对话记录）；\n④院系管理系统（专业培养方案、课程安排）。\n质量管控要点：\n①准确性（政策条文与官方文件完全一致）；\n②权威性（仅采用学校教务处发布的正式数据）；\n③时效性（选课规则、奖助政策更新后及时同步）。"
+  },
+  {
+    "id": 75,
+    "type": "实践题 - 一、业务分析",
+    "question": "题干：某高校计划开发智慧校园智能教务问答系统，基于学籍信息、选课规则、成绩管理、奖助勤贷政策等数据，为学生提供选课咨询、成绩查询、学籍办理、奖助学金申请等智能解答。请结合业务特征和AI技术要求，完成以下简答题：\n\n2. 简述校园教务数据处理流程中需重点完成的核心工作",
+    "options": [],
+    "answer": "核心工作：\n①专业术语归一化（统一“选修课”与“任选课”、“绩点”与“平均学分绩点”等表述）；\n②政策条文结构化（将纯文本政策转为“问题-条件-答案”的结构化格式）；\n③问答场景分类（将教务问题分为选课、成绩、学籍、奖助4大核心场景）；\n④用户身份关联（将问题与学生的专业、年级、班级等身份信息关联）。"
+  },
+  {
+    "id": 76,
+    "type": "实践题 - 一、业务分析",
+    "question": "题干：某高校计划开发智慧校园智能教务问答系统，基于学籍信息、选课规则、成绩管理、奖助勤贷政策等数据，为学生提供选课咨询、成绩查询、学籍办理、奖助学金申请等智能解答。请结合业务特征和AI技术要求，完成以下简答题：\n\n3. 若系统出现“选课相关问题解答准确率低”的问题，分析可能原因并给出1条优化方案",
+    "options": [],
+    "answer": "可能原因：\n①选课规则场景覆盖不足，未区分不同专业/年级的选课限制（如大一不能选专业选修课）；\n②意图识别模型未结合学生身份信息，无法精准匹配“跨专业选课”“补选课”等细分意图；\n③答案库未包含选课冲突、容量不足等高频问题的解决方案。\n优化方案：按专业/年级细分选课问答库，在意图识别阶段融入学生专业、年级特征，实现“问题+身份特征”的精准答案匹配。"
+  },
+  {
+    "id": 77,
+    "type": "实践题 - 二、智能训练",
+    "question": "题干：基于校园消费平台数据开展学生消费行为分类+消费频次预测模型训练（需识别餐饮/商超/教辅/生活服务4类消费类型，预测月消费频次），完成以下简答题和代码填空：\n\n1. 简述校园消费行为数据的清洗标准（至少3条）",
+    "options": [],
+    "answer": "清洗标准：\n①过滤异常值（消费金额≤0或＞1000元的异常记录）；\n②处理缺失值（消费地点缺失填充为“未知区域”，消费类型缺失按消费金额+地点推断）；\n③删除重复数据（按student_id+consume_time+amount查重）；④统一时间格式（将不同格式的消费时间转为“YYYY-MM-DD HH:MM:SS”）；\n⑤剔除测试/异常工单（标注为“测试”的消费记录）。"
+  },
+  {
+    "id": 78,
+    "type": "实践题 - 二、智能训练",
+    "question": "题干：基于校园消费平台数据开展学生消费行为分类+消费频次预测模型训练（需识别餐饮/商超/教辅/生活服务4类消费类型，预测月消费频次），完成以下简答题和代码填空：\n\n2. 制定校园消费行为分类标注规范，明确标注范围、核心规则",
+    "options": [],
+    "answer": "标注规范：\n①标注范围：对校园消费平台的每笔消费记录，按消费场景+品类标注4类消费类型（餐饮：食堂/外卖消费；商超：超市/便利店消费；教辅：书店/打印/教材购买；生活服务：洗衣/洗浴/水电费缴纳）；\n②核心规则：优先按消费品类标注（如购买教材归为教辅类），消费场景为辅（如在食堂超市购买文具归为商超类）；无法明确分类的按消费金额+地点综合判断（如金额＜20元且在教学楼周边归为教辅类）。"
+  },
+  {
+    "id": 79,
+    "type": "实践题 - 二、智能训练",
+    "question": "题干：基于校园消费平台数据开展学生消费行为分类+消费频次预测模型训练（需识别餐饮/商超/教辅/生活服务4类消费类型，预测月消费频次），完成以下简答题和代码填空：\n\n3. 代码填空：以下是消费行为数据预处理与特征工程的Python代码片段，请补充关键代码\n\n\timport pandas as pd\nimport numpy as np\nfrom sklearn.preprocessing import StandardScaler\n \n# 读取消费数据（列名：student_id, consume_time, consume_type, amount, location, pay_method）\ndata = pd.read_csv(\"campus_consume.csv\")\n \n# 转换时间格式并提取时间特征\ndata[\"consume_time\"] = pd.to_datetime(data[\"consume_time\"])\ndata[\"weekday\"] = data[\"__________\"].dt.dayofweek  # 提取星期几（0-6）\ndata[\"hour\"] = data[\"consume_time\"].dt.hour\n \n# 计算学生月消费频次（按student_id分组统计）\nmonth_consume = data.groupby(\"student_id\")[\"consume_time\"].count().reset_index()\nmonth_consume.columns = [\"student_id\", \"month_freq\"]\ndata = pd.merge(data, month_consume, on=\"student_id\", how=\"left\")\n \n# 处理缺失值：支付方式缺失填充为\"校园卡\"\ndata[\"pay_method\"] = data[\"pay_method\"].fillna(\"校园卡\")\n# 编码分类特征（支付方式、消费地点）\ndata[\"pay_method_enc\"] = data[\"pay_method\"].map({\"校园卡\":0, \"微信\":1, \"支付宝\":2})\ndata[\"location_enc\"] = data[\"location\"].astype(\"category\").cat.codes\n \n# 标准化数值特征（消费金额、小时、星期几）\nscaler = StandardScaler()\nnum_features = [\"amount\", \"hour\", \"weekday\"]\ndata[num_features] = scaler.fit_transform(data[__________])\n \n# 划分训练集和验证集（按8:2比例，分层按消费类型）\nfrom sklearn.model_selection import train_test_split\nX = data[[\"pay_method_enc\", \"location_enc\", \"amount\", \"hour\", \"weekday\"]]\ny_type = data[\"consume_type\"]\ny_freq = data[\"month_freq\"]\n \nX_train, X_val, y_train_type, y_val_type = train_test_split(\n    X, y_type, test_size=__________, random_state=42, stratify=y_type\n)",
+    "options": [],
+    "answer": "代码答案：consume_time、num_features、0.2"
+  },
+  {
+    "id": 80,
+    "type": "实践题 - 二、智能训练",
+    "question": "题干：基于校园消费平台数据开展学生消费行为分类+消费频次预测模型训练（需识别餐饮/商超/教辅/生活服务4类消费类型，预测月消费频次），完成以下简答题和代码填空：\n\n4. 代码填空：以下是基于随机森林的消费行为分类+频次预测代码片段，请补充关键代码（7分）\n\n\tfrom sklearn.ensemble import RandomForestClassifier, RandomForestRegressor\nfrom sklearn.metrics import accuracy_score, mean_absolute_error\n \n# 消费类型分类模型训练\ntype_model = RandomForestClassifier(n_estimators=150, max_depth=8, random_state=42)\ntype_model.fit(__________, y_train_type)\n \n# 消费频次回归预测模型训练\nfreq_model = RandomForestRegressor(n_estimators=120, max_depth=6, random_state=42)\nfreq_model.fit(X_train, data.loc[X_train.index, \"month_freq\"])\n \n# 模型评估\ny_pred_type = type_model.predict(X_val)\ny_pred_freq = freq_model.predict(X_val)\n \ntype_acc = accuracy_score(y_val_type, y_pred_type)\nfreq_mae = mean_absolute_error(data.loc[X_val.index, \"month_freq\"], y_pred_freq)\n \nprint(f\"消费类型分类准确率：{type_acc:.4f}\")\nprint(f\"消费频次预测MAE：{freq_mae:.2f}\")",
+    "options": [],
+    "answer": "代码答案：X_train"
+  },
+  {
+    "id": 81,
+    "type": "实践题 - 二、智能训练",
+    "question": "题干：基于校园消费平台数据开展学生消费行为分类+消费频次预测模型训练（需识别餐饮/商超/教辅/生活服务4类消费类型，预测月消费频次），完成以下简答题和代码填空：\n\n5. 若测试发现“教辅消费与生活服务类消费易混淆”，分析错误原因并给出纠正方法（5分）",
+    "options": [],
+    "answer": "错误原因：\n①两类消费场景存在重叠（如教辅类包含打印服务，生活服务也可能包含打印）；\n②特征区分度低，两类消费的金额、消费地点、时间特征无明显差异；③标注规则未明确“教辅类（学习相关）”与“生活服务类（日常便民）”的核心界定标准。\n纠正方法：细化标注规则，明确“教辅类仅限教材购买、学习资料打印，生活服务类为日常便民服务（洗衣/洗浴）”；增加消费品类专属特征（如“教材”“打印纸”等关键词），提升特征区分度。"
+  },
+  {
+    "id": 82,
+    "type": "实践题 - 三、智能系统设计（35分）",
+    "question": "题干：针对高校后勤管理平台开发智能派单系统，基于报修工单信息、维修工技能、校园区域划分、维修工时标准等数据，实现报修工单与维修工的最优匹配及派单优先级排序。完成以下简答题和代码填空：\n\n1. 对该系统的派单效果数据（含派单匹配率、维修完成时效、学生满意度、维修成本）进行分析，输出分析报告需包含哪些核心内容？（8分）",
+    "options": [],
+    "answer": "分析报告核心内容：\n①派单精准度（维修工技能与工单类型的匹配率、负责区域与工单区域的匹配率）；\n②维修效率（平均维修响应时长、工单完成时长）；\n③服务体验（学生报修后的满意度评分、重复报修率）；\n④成本控制（维修工人均工单量、超时维修产生的额外成本）。"
+  },
+  {
+    "id": 83,
+    "type": "实践题 - 三、智能系统设计（35分）",
+    "question": "题干：针对高校后勤管理平台开发智能派单系统，基于报修工单信息、维修工技能、校园区域划分、维修工时标准等数据，实现报修工单与维修工的最优匹配及派单优先级排序。完成以下简答题和代码填空：\n\n2. 结合校园后勤维修场景需求，提出3条系统优化需求（7分）",
+    "options": [],
+    "answer": "优化需求：\n①按紧急程度+维修难度优先派单（如宿舍停电等紧急工单优先分配）；\n②动态调整维修工负载（避免单个维修工分配过多工单导致超时）；③支持维修工手动接单/转单，系统自动重新规划派单；\n④结合维修工历史完成率匹配工单（高完成率维修工匹配复杂工单）。（任答3条）"
+  },
+  {
+    "id": 84,
+    "type": "实践题 - 三、智能系统设计（35分）",
+    "question": "题干：针对高校后勤管理平台开发智能派单系统，基于报修工单信息、维修工技能、校园区域划分、维修工时标准等数据，实现报修工单与维修工的最优匹配及派单优先级排序。完成以下简答题和代码填空：\n\n3. 代码填空：以下是维修工单特征提取与派单匹配预处理的Python代码片段，请补充关键代码（10分）\n\n\timport pandas as pd\n \n# 读取报修工单数据（列名：order_id, repair_type, campus_area, report_time, urgency, fault_desc）\norder_data = pd.read_csv(\"repair_order.csv\")\n# 读取维修工数据（列名：worker_id, skills, responsible_area, available_time, avg_worktime）\nworker_data = pd.read_csv(\"repair_worker.csv\")\n \n# 定义维修工时标准（分钟）\nworktime_std = {\"水电维修\":30, \"家具维修\":45, \"网络维修\":60, \"空调维修\":90}\n# 提取工单维修类型对应的标准工时\norder_data[\"std_worktime\"] = order_data[\"repair_type\"].map(__________)\n \n# 紧急程度编码（紧急/一般/低）\norder_data[\"urgency_enc\"] = order_data[\"urgency\"].map({\"紧急\":2, \"一般\":1, \"低\":0})\n \n# 匹配维修工负责区域与工单区域\ndef match_worker_area(order_area):\n    # 筛选负责该区域的维修工\n    eligible_workers = worker_data[worker_data[\"responsible_area\"] == order_area].copy()\n    return eligible_workers[\"worker_id\"].tolist()\n \norder_data[\"area_match_workers\"] = order_data[\"campus_area\"].apply(__________)\n \n# 匹配维修工技能与工单类型\ndef match_worker_skill(order_row):\n    eligible_workers = []\n    for worker_id in order_row[\"area_match_workers\"]:\n        worker_skills = worker_data[worker_data[\"worker_id\"] == worker_id][\"skills\"].iloc[0].split(\",\")\n        if order_row[\"repair_type\"] in worker_skills:\n            eligible_workers.append(worker_id)\n    return eligible_workers\n \norder_data[\"skill_match_workers\"] = order_data.apply(__________, axis=1)\n \n# 保存匹配结果\norder_data.to_csv(\"repair_order_match.csv\", index=False)",
+    "options": [],
+    "answer": "代码答案：worktime_std、match_worker_area、match_worker_skill"
+  },
+  {
+    "id": 85,
+    "type": "实践题 - 三、智能系统设计（35分）",
+    "question": "题干：针对高校后勤管理平台开发智能派单系统，基于报修工单信息、维修工技能、校园区域划分、维修工时标准等数据，实现报修工单与维修工的最优匹配及派单优先级排序。完成以下简答题和代码填空：\n\n4. 代码填空：以下是基于优先级的维修工单派单排序核心代码片段，请补充关键代码（5分）\n\n\t# 计算派单优先级（紧急程度*2 + 工时权重（1/标准工时））\norder_data[\"worktime_weight\"] = 1 / order_data[\"std_worktime\"]\norder_data[\"priority\"] = order_data[\"urgency_enc\"] * 2 + order_data[\"__________\"]\n \n# 按优先级降序、报修时间升序排序工单\norder_data = order_data.sort_values([\"priority\", \"report_time\"], ascending=[False, True])\n \n# 为每个维修工分配工单（按技能匹配+工时均衡）\nworker_order = {}\nfor _, row in order_data.iterrows():\n    if not row[\"skill_match_workers\"]:\n        continue\n    # 选择当前待处理工单最少的维修工\n    min_orders_worker = min(\n        row[\"skill_match_workers\"],\n        key=lambda x: len(worker_order.get(x, []))\n    )\n    if min_orders_worker not in worker_order:\n        worker_order[min_orders_worker] = []\n    worker_order[min_orders_worker].append(row[\"order_id\"])\n \n# 保存派单结果\nimport json\nwith open(\"repair_worker_order.json\", \"w\", encoding=\"utf-8\") as f:\n    json.dump(__________, f, ensure_ascii=False, indent=2)",
+    "options": [],
+    "answer": "代码答案：worktime_weight、worker_order"
+  },
+  {
+    "id": 86,
+    "type": "实践题 - 三、智能系统设计（35分）",
+    "question": "题干：针对高校后勤管理平台开发智能派单系统，基于报修工单信息、维修工技能、校园区域划分、维修工时标准等数据，实现报修工单与维修工的最优匹配及派单优先级排序。完成以下简答题和代码填空：\n\n5. 简述该系统人工与智能交互的最优方式及核心流程",
+    "options": [],
+    "answer": "最优方式：智能初派单+人工审核调整（系统基于工单特征生成初始派单结果，后勤管理员可根据维修工实时状态手动调整）；\n核心流程：\n①工单采集（收集报修工单的类型、区域、紧急程度等信息）；\n②智能匹配（按技能、区域匹配符合条件的维修工）；\n③优先级排序（按紧急程度、工时权重排序工单）；\n④人工调整（管理员根据维修工忙闲状态修改派单结果）；\n⑤执行反馈（跟踪维修完成情况，收集学生反馈并优化匹配规则）。"
+  },
+  {
+    "id": 87,
+    "type": "实践题 - 四、培训与指导",
+    "question": "1. 简述校园消费行为分类标注初级培训讲义的核心目录",
+    "options": [],
+    "answer": "核心目录：\n①校园消费行为标注基础（标注定义、消费类型分类体系、标注业务价值）；\n②消费类型标注规则（4类消费类型的定义、边界界定标准）；\n③典型案例解析（各类消费类型的正反例、歧义案例处理）；\n④标注工具实操（Excel标注模板、批量标注工具使用）；\n⑤标注质量校验（一致性检查方法、错误案例复盘）。"
+  },
+  {
+    "id": 88,
+    "type": "实践题 - 四、培训与指导",
+    "question": "2. 针对五级/初级工在模型预测结果解读过程中“仅关注数值结果，忽略业务意义”的问题，给出2条具体指导建议",
+    "options": [],
+    "answer": "指导建议：\n①结合校园消费业务场景解读预测结果，如“某学生月消费频次低于5次”需结合其年级（毕业班）、校区（校外实习）分析原因，而非仅关注数值；\n②建立预测结果业务解读模板，包含“数值结果+业务含义+异常原因+优化建议”四部分，规范解读流程；\n③定期开展结果解读案例分享，将纯数值结果转化为后勤运营决策建议（如“教辅消费频次高的区域增加书店营业时间”）。"
+  }
+];
+        let questions = [...allQuestions];
+        let currentIndex = 0;
+        let userAnswers = {}; 
+
+        const qContainer = document.getElementById('q-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const checkBtn = document.getElementById('check-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const typeFilter = document.getElementById('type-filter');
+        const progressText = document.getElementById('progress-text');
+        const progressFill = document.getElementById('progress-fill');
+
+        // Populate type filter dynamically
+        const types = [...new Set(allQuestions.map(q => q.type))];
+        types.forEach(t => {
+            const option = document.createElement('option');
+            option.value = t;
+            option.textContent = t;
+            typeFilter.appendChild(option);
+        });
+
+        function isObjectiveQuestion(q) {
+            return q.type.includes('选择题') || q.type.includes('判断题') || (q.type.includes('填空题') && !q.type.includes('实践题'));
+        }
+
+        function normalizeChoiceAnswer(answer, isMulti) {
+            const normalized = (answer || '').replace(/\s/g, '').toUpperCase();
+            if (!isMulti) return normalized;
+            return normalized.split('').sort().join('');
+        }
+
+        function normalizeTextAnswer(answer) {
+            return (answer || '')
+                .split(/[;；]/)
+                .map(item => item.trim().replace(/\s+/g, '').toLowerCase())
+                .filter(Boolean);
+        }
+
+        function evaluateAnswer(q, rawAnswer) {
+            if (!isObjectiveQuestion(q)) return null;
+            if (q.type.includes('多项')) {
+                return normalizeChoiceAnswer(rawAnswer, true) === normalizeChoiceAnswer(q.answer, true);
+            }
+            if (q.type.includes('选择题') || q.type.includes('判断题')) {
+                return normalizeChoiceAnswer(rawAnswer, false) === normalizeChoiceAnswer(q.answer, false);
+            }
+            const userParts = normalizeTextAnswer(rawAnswer);
+            const correctParts = normalizeTextAnswer(q.answer);
+            if (userParts.length !== correctParts.length) return false;
+            return userParts.every((part, index) => part === correctParts[index]);
+        }
+
+        function checkCurrentQuestion(showAnswer = true) {
+            if (!questions.length) return;
+            const q = questions[currentIndex];
+            userAnswers[q.id + '_checked'] = true;
+            userAnswers[q.id + '_isCorrect'] = evaluateAnswer(q, userAnswers[q.id] || '');
+            if (showAnswer) {
+                renderQuestion();
+                setTimeout(() => {
+                    const answerBox = document.getElementById('answer-area');
+                    if (answerBox) {
+                        answerBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 100);
+            }
+        }
+
+        function getStats() {
+            const objectiveQuestions = questions.filter(isObjectiveQuestion);
+            const subjectiveQuestions = questions.filter(q => !isObjectiveQuestion(q));
+
+            let checked = 0;
+            let correct = 0;
+            objectiveQuestions.forEach(q => {
+                if (userAnswers[q.id + '_checked']) {
+                    checked++;
+                    if (userAnswers[q.id + '_isCorrect'] === true) correct++;
+                }
+            });
+
+            let subjectiveAnswered = 0;
+            subjectiveQuestions.forEach(q => {
+                const val = (userAnswers[q.id] || '').trim();
+                if (val) subjectiveAnswered++;
+            });
+
+            const objectiveScore = objectiveQuestions.length > 0 ? Math.round((correct / objectiveQuestions.length) * 100) : 0;
+            const subjectiveProgress = subjectiveQuestions.length > 0 ? Math.round((subjectiveAnswered / subjectiveQuestions.length) * 100) : 0;
+
+            return {
+                total: questions.length,
+                objectiveTotal: objectiveQuestions.length,
+                checked,
+                correct,
+                wrong: checked - correct,
+                unanswered: objectiveQuestions.length - checked,
+                subjectiveTotal: subjectiveQuestions.length,
+                subjectiveAnswered,
+                objectiveScore,
+                subjectiveProgress,
+                objectivePass: objectiveScore >= 60
+            };
+        }
+
+        function renderQuestion() {
+            if (questions.length === 0) {
+                qContainer.innerHTML = '<div style="text-align:center; padding: 2rem; color: #6b7280;">没有符合条件的题目。</div>';
+                checkBtn.style.display = 'none';
+                submitBtn.style.display = 'none';
+                progressText.innerText = '0 / 0';
+                progressFill.style.width = '0%';
+                return;
+            }
+            
+            const q = questions[currentIndex];
+            const gradingMode = isObjectiveQuestion(q) ? '自动判分' : '参考批改';
+            let html = `
+                <div class="q-header">
+                    <div>
+                        <div class="q-type">${q.type}</div>
+                        <div class="q-id">第 ${q.id} 题 · ${gradingMode}</div>
+                    </div>
+                    <div class="q-count">${currentIndex + 1}/${questions.length}</div>
+                </div>
+            `;
+            
+            // Format code blocks
+            let formattedQuestion = q.question.replace(/```python\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            html += `<div class="q-text">${formattedQuestion}</div>`;
+            
+            const savedAnswer = userAnswers[q.id] || '';
+            const isChecked = userAnswers[q.id + '_checked'] || false;
+            
+            if (q.type.includes('选择题')) {
+                const isMulti = q.type.includes('多项');
+                const inputType = isMulti ? 'checkbox' : 'radio';
+                html += '<div class="options">';
+                q.options.forEach(opt => {
+                    const optLetter = opt.charAt(0);
+                    const optText = opt.replace(/^[A-D]\.\s*/, '');
+                    const isSelected = isMulti ? savedAnswer.includes(optLetter) : savedAnswer === optLetter;
+                    
+                    let className = 'option';
+                    if (isChecked) {
+                        className += ' disabled';
+                        const isCorrect = q.answer.includes(optLetter);
+                        if (isSelected) {
+                            className += isCorrect ? ' correct' : ' incorrect';
+                        } else if (isCorrect) {
+                            className += ' correct';
+                        }
+                    } else if (isSelected) {
+                        className += ' selected';
+                    }
+                    
+                    html += `
+                        <label class="${className}">
+                            <input type="${inputType}" name="q_opt" value="${optLetter}" 
+                                ${isSelected ? 'checked' : ''} 
+                                ${isChecked ? 'disabled' : ''}>
+                            <span class="choice-mark">${optLetter}</span>
+                            <span class="option-copy">${optText}</span>
+                        </label>
+                    `;
+                });
+                html += '</div>';
+            } else if (q.type.includes('判断题')) {
+                html += '<div class="options">';
+                ['√', '×'].forEach(opt => {
+                    const isSelected = savedAnswer === opt;
+                    let className = 'option';
+                    if (isChecked) {
+                        className += ' disabled';
+                        const isCorrect = q.answer === opt;
+                        if (isSelected) {
+                            className += isCorrect ? ' correct' : ' incorrect';
+                        } else if (isCorrect) {
+                            className += ' correct';
+                        }
+                    } else if (isSelected) {
+                        className += ' selected';
+                    }
+                    html += `
+                        <label class="${className}">
+                            <input type="radio" name="q_opt" value="${opt}" 
+                                ${isSelected ? 'checked' : ''} 
+                                ${isChecked ? 'disabled' : ''}>
+                            <span class="choice-mark">${opt}</span>
+                            <span class="option-copy">${opt === '√' ? '正确' : '错误'}</span>
+                        </label>
+                    `;
+                });
+                html += '</div>';
+            } else if (q.type.includes('填空题') && !q.type.includes('实践题')) {
+                html += `
+                    <input type="text" class="input-text" id="text-answer" 
+                        value="${savedAnswer}" placeholder="请输入答案，多个空请用分号隔开"
+                        ${isChecked ? 'disabled' : ''}>
+                `;
+            } else {
+                html += `
+                    <textarea class="input-textarea" id="text-answer" 
+                        placeholder="请输入您的解答思路..."
+                        ${isChecked ? 'disabled' : ''}>${savedAnswer}</textarea>
+                `;
+            }
+            
+            html += `
+                <div class="answer-box ${isChecked ? 'show' : ''}" id="answer-area">
+                    <div class="answer-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        参考答案${isObjectiveQuestion(q) && isChecked ? (userAnswers[q.id + '_isCorrect'] ? '（判定：正确）' : '（判定：错误）') : ''}
+                    </div>
+                    <div class="answer-content">${q.answer}</div>
+                </div>
+            `;
+            
+            qContainer.innerHTML = html;
+            
+            const stats = getStats();
+            const progressPercent = Math.round(((currentIndex + 1) / questions.length) * 100);
+            progressText.innerText = `第 ${currentIndex + 1} / ${questions.length} 题 · 客观题 ${stats.correct}/${stats.objectiveTotal}`;
+            progressFill.style.width = `${progressPercent}%`;
+            
+            if (!isChecked) {
+                if (q.type.includes('选择题') || q.type.includes('判断题')) {
+                    const inputs = document.querySelectorAll('input[name="q_opt"]');
+                    inputs.forEach(input => {
+                        input.addEventListener('change', () => {
+                            if (q.type.includes('多项')) {
+                                const checked = Array.from(document.querySelectorAll('input[name="q_opt"]:checked')).map(cb => cb.value);
+                                userAnswers[q.id] = checked.join('');
+                            } else {
+                                userAnswers[q.id] = input.value;
+                            }
+                            document.querySelectorAll('.option').forEach(lbl => lbl.classList.remove('selected'));
+                            document.querySelectorAll('input[name="q_opt"]:checked').forEach(cb => {
+                                cb.closest('.option').classList.add('selected');
+                            });
+                        });
+                    });
+                } else {
+                    const textInput = document.getElementById('text-answer');
+                    if (textInput) {
+                        textInput.addEventListener('input', (e) => {
+                            userAnswers[q.id] = e.target.value;
+                        });
+                    }
+                }
+            }
+            
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === questions.length - 1;
+            
+            if (isChecked) {
+                checkBtn.style.display = 'none';
+            } else {
+                checkBtn.style.display = 'flex';
+            }
+            submitBtn.style.display = 'flex';
+            
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        checkBtn.addEventListener('click', () => {
+            checkCurrentQuestion(true);
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < questions.length - 1) {
+                checkCurrentQuestion(false);
+                currentIndex++;
+                renderQuestion();
+            }
+        });
+
+        submitBtn.addEventListener('click', () => {
+            checkCurrentQuestion(false);
+            const stats = getStats();
+            const message = [
+                '交卷完成',
+                `总题数：${stats.total}`,
+                `客观题：${stats.objectiveTotal}（自动判分）`,
+                `客观题得分：${stats.objectiveScore} / 100（${stats.objectivePass ? '及格' : '不及格'}，60分及格）`,
+                `已判题：${stats.checked}`,
+                `正确：${stats.correct}`,
+                `错误：${stats.wrong}`,
+                `未作答：${stats.unanswered}`,
+                `主观/实践题：${stats.subjectiveTotal}`,
+                `主观/实践题已作答：${stats.subjectiveAnswered}`,
+                `主观/实践题完成度：${stats.subjectiveProgress} / 100`,
+                '说明：主观题和实践题展示参考答案，页面仅按是否作答统计完成度。'
+            ].join('\n');
+            alert(message);
+        });
+
+        typeFilter.addEventListener('change', (e) => {
+            const type = e.target.value;
+            if (type === 'all') {
+                questions = [...allQuestions];
+            } else {
+                questions = allQuestions.filter(q => q.type === type);
+            }
+            currentIndex = 0;
+            renderQuestion();
+        });
+
+        // Initialize
+        renderQuestion();
+    </script>
+</body>
+</html>
