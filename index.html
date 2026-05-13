@@ -285,27 +285,32 @@
 
         @media (max-width: 700px) {
             .app-container { max-width: none; border: none; }
-            .header { padding: 0.85rem 0.9rem 0.95rem; }
+            .header { padding: 0.68rem 0.85rem 0.72rem; }
             .brand-row { align-items: flex-start; }
-            .header h1 { font-size: 1.08rem; }
-            .header-subtitle { font-size: 0.76rem; }
+            .header h1 { font-size: 1.05rem; }
+            .header-subtitle { display: none; }
             .header-badge { display: none; }
-            .visual-strip {
-                height: 46px;
-                background:
-                    linear-gradient(90deg, rgba(251, 252, 248, 0.98) 0%, rgba(251, 252, 248, 0.82) 52%, rgba(251, 252, 248, 0.12) 100%),
-                    url("assets/study-hero.png") right center / cover no-repeat;
-            }
-            .controls-top { grid-template-columns: 1fr; gap: 0.7rem; padding: 0.75rem 0.85rem; }
-            .progress { text-align: left; }
-            .main-content { padding: 0.7rem; }
-            .card { padding: 0.9rem; border-radius: 9px; }
-            .q-header { margin-bottom: 0.75rem; padding-bottom: 0.75rem; }
-            .q-count { font-size: 0.95rem; }
-            .q-text { font-size: 1rem; margin-bottom: 0.85rem; max-height: 34vh; }
+            .visual-strip { display: none; }
+            .controls-top { grid-template-columns: 1fr; gap: 0.5rem; padding: 0.55rem 0.75rem; }
+            .filter-field { gap: 0.25rem; }
+            .field-label { font-size: 0.72rem; }
+            select { padding: 0.55rem 0.7rem; font-size: 0.92rem; }
+            .progress { text-align: left; font-size: 0.82rem; }
+            .progress-track { height: 6px; }
+            .main-content { padding: 0.55rem; overflow-y: auto; }
+            .card { flex: 0 0 auto; min-height: auto; padding: 0.85rem; border-radius: 9px; }
+            .q-header { margin-bottom: 0.65rem; padding-bottom: 0.65rem; }
+            .q-type { font-size: 0.78rem; padding: 0.26rem 0.58rem; }
+            .q-id { font-size: 0.78rem; margin-top: 0.35rem; }
+            .q-count { font-size: 0.9rem; }
+            .q-text { font-size: 1rem; line-height: 1.68; margin-bottom: 0.85rem; max-height: none; overflow: visible; padding-right: 0; }
+            .q-text pre { font-size: 0.82rem; padding: 0.75rem; border-radius: 7px; }
+            .options { flex: 0 0 auto; overflow: visible; padding: 0.05rem 0 0.6rem; gap: 0.6rem; }
             .option { grid-template-columns: 1.9rem 1fr; min-height: 3rem; padding: 0.72rem; font-size: 0.95rem; }
             .choice-mark { width: 1.85rem; height: 1.85rem; border-radius: 7px; }
-            .bottom-bar { grid-template-columns: 1fr 1fr; padding: 0.7rem; gap: 0.55rem; }
+            .input-textarea { flex: 0 0 auto; min-height: 220px; }
+            .answer-box { max-height: none; overflow: visible; margin-top: 0.9rem; }
+            .bottom-bar { grid-template-columns: 1fr 1fr; padding: 0.58rem; gap: 0.5rem; }
             .btn { padding: 0.72rem 0.45rem; font-size: 0.9rem; }
         }
     </style>
